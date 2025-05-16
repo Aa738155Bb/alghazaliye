@@ -1,12 +1,31 @@
 import os
 import logging
 from flask import Flask, render_template
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
+# إنشاء تطبيق Flask
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "default_secret_key")
+
+# تحميل الإعدادات من config.py
+from config import get_config
+app.config.from_object(get_config())
+
+# تهيئة قاعدة البيانات
+db = SQLAlchemy(app)
+
+# تهيئة نظام تسجيل الدخول
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    from models.users import User
+    return User.query.get(int(user_id))
 
 # Routes
 @app.route('/')
